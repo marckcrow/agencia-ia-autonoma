@@ -1,0 +1,21 @@
+[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 0
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Legenda,Montserrat,58,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,4,2,2,80,80,230,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.00,0:00:06.00,Legenda,,0,0,0,,{\fad(120,120)}Seu assistente de IA só responde.
+Dialogue: 0,0:00:06.00,0:00:12.00,Legenda,,0,0,0,,{\fad(120,120)}O que já existe hoje vai lá e faz.
+Dialogue: 0,0:00:12.00,0:00:18.00,Legenda,,0,0,0,,{\fad(120,120)}A diferença se chama agente.
+Dialogue: 0,0:00:18.00,0:00:27.00,Legenda,,0,0,0,,{\fad(120,120)}Um agente recebe um objetivo, quebra em etapas e executa.
+Dialogue: 0,0:00:27.00,0:00:36.00,Legenda,,0,0,0,,{\fad(120,120)}O Google usou o Gemini 4 Argon num teste interno.
+Dialogue: 0,0:00:36.00,0:00:45.00,Legenda,,0,0,0,,{\fad(120,120)}40% menos tempo de preparação. 21% mais rápido.
+Dialogue: 0,0:00:45.00,0:00:52.00,Legenda,,0,0,0,,{\fad(120,120)}Guarda o contexto: foi teste interno, não é ganho garantido.
+Dialogue: 0,0:00:52.00,0:00:58.00,Legenda,,0,0,0,,{\fad(120,120)}O ganho é ter uma IA que termina o que começou.
+Dialogue: 0,0:00:58.00,0:01:04.00,Legenda,,0,0,0,,{\fad(120,120)}Salva pra ver depois.

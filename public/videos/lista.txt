@@ -1,0 +1,17 @@
+file 'C:/Users/Administrador/.abacusai-bot/session-home/agencia-ia/public/videos/cenas/cena1.png'
+duration 6
+file 'C:/Users/Administrador/.abacusai-bot/session-home/agencia-ia/public/videos/cenas/cena2.png'
+duration 6
+file 'C:/Users/Administrador/.abacusai-bot/session-home/agencia-ia/public/videos/cenas/cena3.png'
+duration 6
+file 'C:/Users/Administrador/.abacusai-bot/session-home/agencia-ia/public/videos/cenas/cena4.png'
+duration 9
+file 'C:/Users/Administrador/.abacusai-bot/session-home/agencia-ia/public/videos/cenas/cena5.png'
+duration 7
+file 'C:/Users/Administrador/.abacusai-bot/session-home/agencia-ia/public/videos/cenas/cena6.png'
+duration 5
+file 'C:/Users/Administrador/.abacusai-bot/session-home/agencia-ia/public/videos/cenas/cena7.png'
+duration 8
+file 'C:/Users/Administrador/.abacusai-bot/session-home/agencia-ia/public/videos/cenas/cena8.png'
+duration 13
+file 'C:/Users/Administrador/.abacusai-bot/session-home/agencia-ia/public/videos/cenas/cena8.png'
