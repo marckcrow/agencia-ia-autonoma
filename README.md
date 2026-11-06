@@ -32,11 +32,18 @@ node scripts/gerar-snapshot.js
 
 ```bash
 node scripts/testar-etapa2.js
+node scripts/testar-integridade.js
+node scripts/testar-etapa4a.js
 ```
 
-Roda 25 verificações num banco temporário (sem tocar nos dados reais): os três botões,
-as travas de validação, o reenvio, a gravação em disco, a persistência após reiniciar o
-servidor e a ausência de qualquer rota de publicação.
+Roda 85 verificações, cada uma em banco temporário próprio (sem tocar nos dados reais):
+
+- `testar-etapa2.js` (25) — os três botões da Sala de Direção, travas de validação,
+  reenvio, gravação em disco, persistência após reiniciar o servidor e a ausência
+  de qualquer rota de publicação.
+- `testar-integridade.js` (21) — vínculos produto → pauta → roteiro → arte/vídeo.
+- `testar-etapa4a.js` (39) — vocabulário de status (`aprovado` × `aprovado_final`),
+  vínculo com o slot do calendário, serialização das transações e metadados auditados.
 
 ## Estrutura
 
@@ -47,13 +54,17 @@ agencia-ia/
 │   ├── index.js                  # servidor HTTP + rotas da API (sem dependências)
 │   ├── store.js                  # camada de persistência assíncrona (troca por banco na nuvem)
 │   └── services/
-│       ├── calendario.js         # grade semanal de slots
+│       ├── calendario.js         # grade semanal de slots + vínculo conteúdo ↔ slot
 │       ├── indicadores.js        # indicadores derivados de dados reais
-│       ├── conteudos.js          # criação, decisões e reenvio (regras de direção)
+│       ├── conteudos.js          # criação, decisões, reenvio e regras de direção
+│       ├── agentes.js            # regras de validação dos agentes A1, A2 e A3
 │       └── integracoes.js        # registro das integrações futuras
 ├── scripts/
 │   ├── gerar-snapshot.js         # gera public/api/*.json
-│   └── testar-etapa2.js          # 25 verificações automáticas
+│   ├── estabilizar-etapa4a.js    # alinha metadados do banco com a implementação real
+│   ├── testar-etapa2.js          # 25 verificações automáticas
+│   ├── testar-integridade.js     # 21 verificações de vínculos
+│   └── testar-etapa4a.js         # 39 verificações de regressão da Etapa 4A
 └── public/                       # interface (HTML, CSS, JS puro, sem CDN)
     ├── index.html
     ├── css/painel.css

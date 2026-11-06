@@ -410,6 +410,7 @@ body {
 .etiqueta.pronto_para_integrar { background: rgba(74,163,240,.1); color: #7cc0f7; border: 1px solid rgba(74,163,240,.28); }
 .etiqueta.indisponivel { background: rgba(226,92,92,.1); color: #ef8b8b; border: 1px solid rgba(226,92,92,.28); }
 .etiqueta.ativo { background: rgba(0,184,148,.12); color: #63e0c1; border: 1px solid rgba(0,184,148,.3); }
+.etiqueta.implementado { background: rgba(0,184,148,.12); color: #63e0c1; border: 1px solid rgba(0,184,148,.3); }
 
 /* ------------------------------ Listas / pendentes ------------------------------ */
 
@@ -529,6 +530,7 @@ body {
 /* etiquetas por status */
 .etiqueta.st-aprovacao { background: rgba(240,180,41,.1); color: #f0c566; border: 1px solid rgba(240,180,41,.3); }
 .etiqueta.st-aprovado { background: rgba(0,184,148,.12); color: #63e0c1; border: 1px solid rgba(0,184,148,.32); }
+.etiqueta.st-aprovado_final { background: rgba(0,184,148,.12); color: #63e0c1; border: 1px solid rgba(0,184,148,.32); }
 .etiqueta.st-ajuste { background: rgba(74,163,240,.1); color: #7cc0f7; border: 1px solid rgba(74,163,240,.3); }
 .etiqueta.st-rejeitado { background: rgba(226,92,92,.1); color: #ef8b8b; border: 1px solid rgba(226,92,92,.3); }
 .etiqueta.st-publicado { background: rgba(108,92,231,.14); color: #b3a8f5; border: 1px solid rgba(108,92,231,.32); }

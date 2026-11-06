@@ -66,6 +66,14 @@ window.Api = (function () {
     return requisitar(caminho, { method: 'POST', body: JSON.stringify(corpo || {}) });
   }
 
+  /** Remove (DELETE) apenas via API ao vivo. */
+  function remover(caminho) {
+    if (!paraVivo()) {
+      return Promise.reject(new Error('Modo estatico: gravacao indisponivel. Inicie o servidor do painel.'));
+    }
+    return requisitar(caminho, { method: 'DELETE' });
+  }
+
   return {
     modo: () => modo,
     aoMudarModo: (fn) => ouvintes.push(fn),
@@ -103,6 +111,8 @@ window.Api = (function () {
     criarConteudo: (dados) => escrever('/conteudos', dados),
     decidir: (id, dados) => escrever(`/conteudos/${encodeURIComponent(id)}/decisao`, dados),
     reenviar: (id, dados) => escrever(`/conteudos/${encodeURIComponent(id)}/reenviar`, dados),
+    agendarSlot: (id, dados) => escrever(`/conteudos/${encodeURIComponent(id)}/slot`, dados),
+    desagendarSlot: (id) => remover(`/conteudos/${encodeURIComponent(id)}/slot`),
 
     criarPauta: (dados) => escrever('/agentes/pautas', dados),
     criarRoteiro: (pautaId, dados) => escrever(`/agentes/pautas/${encodeURIComponent(pautaId)}/roteiro`, dados),

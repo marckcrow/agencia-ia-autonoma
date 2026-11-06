@@ -11,6 +11,8 @@
  */
 'use strict';
 
+const conteudosSvc = require('./conteudos');
+
 const DIAS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
 const DIAS_LABEL = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 const PLATAFORMAS = {
@@ -71,6 +73,7 @@ function gerarSemana(db, dataRef) {
         hora: s.hora,
         plataformas: canal.plataformas,
         status: conteudo ? conteudo.status : 'vazio',
+        prontoParaPublicar: conteudo ? conteudosSvc.podePublicar(conteudo) : false,
         conteudoId: conteudo ? conteudo.id : null,
         titulo: conteudo ? conteudo.titulo : null,
       });
@@ -88,4 +91,104 @@ function gerarSemana(db, dataRef) {
   };
 }
 
-module.exports = { gerarSemana, inicioDaSemana, isoData, chaveSlot, PLATAFORMAS };
+/* ------------------------- vínculo conteúdo ↔ slot ------------------------- */
+
+/** Dia da semana no padrão do projeto: 0=domingo, 1=segunda ... 6=sábado. */
+function diaDaSemana(dataISO) {
+  const d = new Date(`${dataISO}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.getDay();
+}
+
+function dataValida(dataISO) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dataISO || ''))) return false;
+  const d = new Date(`${dataISO}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return false;
+  return d.toISOString().slice(0, 10) === dataISO;
+}
+
+/**
+ * Vincula um conteúdo já aprovado a um slot do calendário editorial.
+ * Regras: o slot precisa existir na grade do canal, um slot aceita um
+ * conteúdo por vez e só conteúdo aprovado pode ser agendado.
+ */
+function agendar(db, conteudoId, { data, hora }) {
+  const conteudo = (db.conteudos || []).find((c) => c.id === conteudoId);
+  if (!conteudo) throw Object.assign(new Error('Conteúdo não encontrado'), { status: 404 });
+
+  if (!conteudosSvc.podeAgendar(conteudo)) {
+    throw Object.assign(
+      new Error('Só conteúdo aprovado pela Direção pode ser agendado no calendário.'),
+      { status: 409 }
+    );
+  }
+
+  if (!dataValida(data)) {
+    throw Object.assign(new Error('Data inválida. Use o formato AAAA-MM-DD.'), { status: 400 });
+  }
+  const horaLimpa = String(hora || '').trim();
+  if (!/^\d{2}:\d{2}$/.test(horaLimpa)) {
+    throw Object.assign(new Error('Hora inválida. Use o formato HH:MM.'), { status: 400 });
+  }
+
+  const canal = (db.canais || []).find((c) => c.id === conteudo.canalId);
+  if (!canal) throw Object.assign(new Error('Canal inexistente'), { status: 400 });
+
+  const dia = diaDaSemana(data);
+  const existeNaGrade = (canal.slots || []).some((s) => s.dia === dia && s.hora === horaLimpa);
+  if (!existeNaGrade) {
+    throw Object.assign(
+      new Error(`Slot inexistente na grade do canal ${canal.nome} (${data} ${horaLimpa}).`),
+      { status: 400 }
+    );
+  }
+
+  const ocupado = (db.conteudos || []).find(
+    (c) => c.id !== conteudoId && c.slot
+      && c.slot.canalId === canal.id && c.slot.data === data && c.slot.hora === horaLimpa
+  );
+  if (ocupado) {
+    throw Object.assign(
+      new Error(`Slot já ocupado por "${ocupado.titulo}".`),
+      { status: 409 }
+    );
+  }
+
+  conteudo.slot = {
+    canalId: canal.id,
+    data,
+    hora: horaLimpa,
+    vinculadoEm: new Date().toISOString(),
+  };
+  conteudo.atualizadoEm = new Date().toISOString();
+  db.historico = db.historico || [];
+  db.historico.push({
+    em: conteudo.atualizadoEm,
+    tipo: 'agendamento',
+    conteudoId: conteudo.id,
+    texto: `Conteúdo agendado no slot ${data} ${horaLimpa} (${canal.nome}): "${conteudo.titulo}".`,
+  });
+  return conteudo;
+}
+
+/** Libera o slot do conteúdo (não apaga o conteúdo nem a decisão). */
+function desagendar(db, conteudoId) {
+  const conteudo = (db.conteudos || []).find((c) => c.id === conteudoId);
+  if (!conteudo) throw Object.assign(new Error('Conteúdo não encontrado'), { status: 404 });
+  if (!conteudo.slot) {
+    throw Object.assign(new Error('Este conteúdo não está agendado.'), { status: 409 });
+  }
+  const anterior = conteudo.slot;
+  conteudo.slot = null;
+  conteudo.atualizadoEm = new Date().toISOString();
+  db.historico = db.historico || [];
+  db.historico.push({
+    em: conteudo.atualizadoEm,
+    tipo: 'agendamento',
+    conteudoId: conteudo.id,
+    texto: `Slot liberado (${anterior.data} ${anterior.hora}): "${conteudo.titulo}".`,
+  });
+  return conteudo;
+}
+
+module.exports = { gerarSemana, inicioDaSemana, isoData, chaveSlot, PLATAFORMAS, agendar, desagendar, diaDaSemana };

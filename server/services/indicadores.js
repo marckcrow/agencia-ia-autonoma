@@ -7,6 +7,8 @@
  */
 'use strict';
 
+const conteudosSvc = require('./conteudos');
+
 const STATUS = [
   { id: 'pauta', label: 'Pauta', agente: 'a1' },
   { id: 'roteiro', label: 'Roteiro', agente: 'a3' },
@@ -14,6 +16,7 @@ const STATUS = [
   { id: 'edicao', label: 'Edição', agente: 'a5' },
   { id: 'aprovacao', label: 'Aguardando aprovação', agente: 'a6' },
   { id: 'aprovado', label: 'Aprovado', agente: 'a6' },
+  { id: 'aprovado_final', label: 'Aprovado para publicação', agente: 'a6' },
   { id: 'publicado', label: 'Publicado', agente: 'a6' },
   { id: 'ajuste', label: 'Em ajuste', agente: 'a3' },
   { id: 'pauta_aprovada', label: 'Pauta aprovada', agente: 'a3' },
@@ -90,13 +93,15 @@ function indicadores(db, semana) {
     metaSemanal: meta,
     totalConteudos: conteudos.length,
     resumoDecisoes,
-    prontosParaPublicar: conteudos.filter((c) => c.status === 'aprovado').length,
+    prontosParaPublicar: conteudos.filter((c) => conteudosSvc.podePublicar(c)).length,
     emAjuste: conteudos.filter((c) => c.status === 'ajuste').length,
     pautasAguardando: conteudos.filter((c) => c.tipo === 'pauta' && c.status === 'aprovacao').length,
     pautasAvaliadas: conteudos.filter((c) => c.tipo === 'pauta' && c.avaliacao).length,
     pautasPrioritarias: (db.avaliacoes || []).filter((a) => a.prioridade).length,
     calendariosPropostos: (db.calendarios || []).length,
     pautasAprovadas: conteudos.filter((c) => c.status === 'pauta_aprovada').length,
+    aprovadosFinal: conteudos.filter((c) => c.status === 'aprovado_final').length,
+    agendadosNoCalendario: conteudos.filter((c) => c.slot).length,
     roteirosAguardando: conteudos.filter((c) => c.tipo === 'roteiro' && c.status === 'aprovacao').length,
     execucoes: (db.execucoes || []).map((e) => ({
       id: e.id, agente: e.agente, iniciadaEm: e.iniciadaEm, encerradaEm: e.encerradaEm,

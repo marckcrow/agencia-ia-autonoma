@@ -22,6 +22,7 @@ const STATUS = {
   pauta_aprovada: { label: 'Pauta aprovada', agente: 'A3' },
   em_roteiro: { label: 'Em roteiro', agente: 'A3' },
   aprovado: { label: 'Aprovado', agente: 'A6' },
+  aprovado_final: { label: 'Aprovado para publicação', agente: 'A6' },
   rejeitado: { label: 'Rejeitado', agente: null },
   publicado: { label: 'Publicado', agente: 'A6' },
 };
@@ -35,6 +36,9 @@ function agora() {
 function validarDecisao(statusAtual, decisao) {
   if (!['aprovar', 'ajustes', 'rejeitar'].includes(decisao)) {
     return 'Decisão inválida. Use aprovar, ajustes ou rejeitar.';
+  }
+  if (statusAtual === 'aprovado_final') {
+    return 'Conteúdo já tem aprovação final. Para alterá-lo, use a etapa de publicação e registre a orientação.';
   }
   if (statusAtual === 'publicado') {
     return 'Conteúdo já publicado não pode ser alterado nesta etapa.';
@@ -187,9 +191,46 @@ function reenviar(db, conteudoId, { corpo, orientacoes }) {
   return conteudo;
 }
 
-/** Só conteúdo aprovado pode ser agendado. Trava de segurança do sistema. */
+/**
+ * Trava de segurança: só conteúdo com aprovação da Direção pode ser agendado
+ * e, principalmente, só a aprovação FINAL libera a publicação.
+ *
+ * Existiam dois vocabulários de status para a mesma coisa:
+ *   - "aprovado"       → aprovação pontual na Sala de Direção (fluxo legado);
+ *   - "aprovado_final" → aprovação final do fluxo de 4 etapas (pauta → roteiro
+ *                        → produção → final), gravada em `aprovacoes.final`.
+ *
+ * Agora ambos existem no mapa de status, mas a publicação exige a aprovação
+ * final. Um item aprovado no fluxo legado continua publicável apenas quando
+ * não existe o fluxo de 4 etapas por trás dele (compatibilidade com os itens
+ * já gravados no banco).
+ */
 function podePublicar(conteudo) {
-  return Boolean(conteudo && conteudo.status === 'aprovado' && conteudo.aprovadoEm);
+  if (!conteudo) return false;
+
+  if (conteudo.status === 'aprovado_final') {
+    const final = conteudo.aprovacoes && conteudo.aprovacoes.final;
+    return Boolean(final && final.status === 'aprovada');
+  }
+
+  if (conteudo.status === 'aprovado' && conteudo.aprovadoEm) {
+    const etapas = conteudo.aprovacoes;
+    if (!etapas) return true; // fluxo legado: aprovação pontual da Direção
+    // existe fluxo de 4 etapas: só vale se a aprovação final estiver de pé
+    if (etapas.final && etapas.final.status === 'aprovada') return true;
+    return false;
+  }
+
+  return false;
 }
 
-module.exports = { criarConteudo, decidir, reenviar, podePublicar, STATUS, TIPOS };
+/**
+ * Um conteúdo pode ser vinculado a um slot do calendário quando já passou
+ * por aprovação humana. Não significa publicação: significa plano.
+ */
+function podeAgendar(conteudo) {
+  if (!conteudo) return false;
+  return ['pauta_aprovada', 'aprovado', 'aprovado_final'].includes(conteudo.status);
+}
+
+module.exports = { criarConteudo, decidir, reenviar, podePublicar, podeAgendar, STATUS, TIPOS };

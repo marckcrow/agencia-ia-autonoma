@@ -33,6 +33,7 @@
     pauta_aprovada: 'Pauta aprovada',
     em_roteiro: 'Em roteiro',
     aprovado: 'Aprovado',
+    aprovado_final: 'Aprovado para publicação',
     rejeitado: 'Rejeitado',
     publicado: 'Publicado',
   };
@@ -253,6 +254,7 @@
       nao_implementado: 'Não implementado',
       pendente: 'Pendente',
       pronto_para_integrar: 'Pronto para integrar',
+      implementado: 'Implementado (API ativa)',
       indisponivel: 'Indisponível',
       ativo: 'Ativo',
     }[s] || s;
@@ -675,6 +677,7 @@
       { id: 'aprovacao', label: 'Aguardando aprovação', agente: 'A6' },
       { id: 'ajuste', label: 'Em ajuste', agente: 'A3' },
       { id: 'aprovado', label: 'Aprovado', agente: 'A6' },
+      { id: 'aprovado_final', label: 'Aprovado (final)', agente: 'A6' },
       { id: 'rejeitado', label: 'Rejeitado', agente: '—' },
       { id: 'publicado', label: 'Publicado', agente: 'A6' },
     ];
@@ -722,8 +725,9 @@
 
       <div class="aviso neutro">
         <span>${icone('info')}</span>
-        <div>Os agentes A1 a A5 ainda não geram conteúdo automaticamente (Etapas 3 e 4). Todo item
-        exibido aqui foi registrado de fato no banco — pela direção ou, futuramente, pelos agentes.</div>
+        <div>A1, A2 e A3 já registram pauta, avaliação e roteiro pela API. A4, A5 e A6 ainda são
+        apenas especificação, sem código. Todo item exibido aqui foi registrado de fato no banco —
+        pela direção ou pelos agentes, sempre com aprovação humana obrigatória.</div>
       </div>
     `;
   }
@@ -753,9 +757,10 @@
       </div>
       <div class="aviso">
         <span>${icone('alert')}</span>
-        <div>Os seis agentes estão <b>especificados, não implementados</b>. A infraestrutura que eles
-        vão usar já existe: <code>POST /api/conteudos</code> registra qualquer saída de agente com
-        autoria e status, e <code>POST /api/conteudos/:id/decisao</code> registra a sua decisão.</div>
+        <div><b>A1, A2 e A3 estão implementados</b> (código próprio e execuções registradas no banco)
+        e ainda não têm interface própria — rodam pela API. <b>A4, A5 e A6 são apenas especificação</b>,
+        sem código. A aprovação humana continua obrigatória:
+        <code>POST /api/conteudos/:id/decisao</code> registra a sua decisão e nada é publicado sem ela.</div>
       </div>
     `;
   }

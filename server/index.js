@@ -108,7 +108,8 @@ async function api(rota, req, res, url) {
       if (!c) return json(res, 404, { erro: 'Conteúdo não encontrado' });
       const decisoes = (db.decisoes || []).filter((d) => d.conteudoId === c.id).slice().reverse();
       const podePublicar = conteudosSvc.podePublicar(c);
-      return json(res, 200, { conteudo: c, decisoes, podePublicar });
+      const podeAgendar = conteudosSvc.podeAgendar(c);
+      return json(res, 200, { conteudo: c, decisoes, podePublicar, podeAgendar });
     }
     if (rota === '/api/pendentes') {
       const ind = indicadoresSvc.indicadores(db, calendario.gerarSemana(db));
@@ -197,6 +198,13 @@ async function api(rota, req, res, url) {
     const mReenvio = rota.match(/^\/api\/conteudos\/([^/]+)\/reenviar$/);
     if (mReenvio) {
       const c = await store.transacao((d) => conteudosSvc.reenviar(d, mReenvio[1], corpo));
+      return json(res, 200, c);
+    }
+
+    /* ----- vínculo com o slot do calendário editorial ----- */
+    const mSlot = rota.match(/^\/api\/conteudos\/([^/]+)\/slot$/);
+    if (mSlot) {
+      const c = await store.transacao((d) => calendario.agendar(d, mSlot[1], corpo));
       return json(res, 200, c);
     }
 
@@ -378,6 +386,7 @@ async function api(rota, req, res, url) {
         c.aprovacoes.final = { status: decisao === 'aprovar' ? 'aprovada' : decisao === 'ajustes' ? 'ajuste' : 'rejeitada', em };
         c.status = decisao === 'aprovar' ? 'aprovado_final' : decisao === 'ajustes' ? 'ajuste' : 'rejeitado';
         c.atualizadoEm = em;
+        c.aprovadoEm = decisao === 'aprovar' ? em : null;
         if (decisao !== 'aprovar') c.aprovacoes.producao = { status: 'pendente', em: null };
         d.decisoes = d.decisoes || [];
         d.decisoes.push({ id: 'pub-' + Date.now(), conteudoId: id, decisao: 'publicacao_' + decisao,
@@ -406,6 +415,16 @@ async function api(rota, req, res, url) {
       return json(res, 200, exec);
     }
 
+    return json(res, 404, { erro: 'Rota não encontrada', rota });
+  }
+
+  /* ----- escrita: liberar slot do calendário ----- */
+  if (metodo === 'DELETE') {
+    const mSlot = rota.match(/^\/api\/conteudos\/([^/]+)\/slot$/);
+    if (mSlot) {
+      const c = await store.transacao((d) => calendario.desagendar(d, mSlot[1]));
+      return json(res, 200, c);
+    }
     return json(res, 404, { erro: 'Rota não encontrada', rota });
   }
 
