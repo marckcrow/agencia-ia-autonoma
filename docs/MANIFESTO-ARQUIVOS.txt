@@ -1,0 +1,31 @@
+# Manifesto dos arquivos produzidos (não incluídos no ZIP por tamanho)
+
+## Artes (PNG 1080×1350)
+public/artes/arte-ia-na-pratica.png     ~82 KB
+public/artes/arte-voce-sabia.png        ~95 KB
+public/artes/arte-poder-50.png          ~92 KB
+
+## Vídeo
+public/videos/previa-ia-na-pratica.mp4        3,4 MB  1080x1920  H.264 CRF18  59,83s
+public/videos/previa-ia-na-pratica-v1-baixa.mp4  1,1 MB  (versão 1, qualidade insuficiente)
+public/videos/cenas/cena1..8.png               8 cenas do storyboard
+
+## Áudio (amostras de voz, -16 LUFS)
+vozes/amostras/ia-cadu.mp3
+vozes/amostras/ia-jeff.mp3
+vozes/amostras/poder-faber.mp3
+vozes/amostras/sabia-maria.mp3         (provisória, licença Windows)
+vozes/amostras/sabia-kokoro-1.0.mp3
+vozes/amostras/sabia-kokoro-0.92.mp3
+vozes/amostras/ritmo-ia-na-pratica-1.05.mp3
+vozes/amostras/ritmo-ia-na-pratica-1.15.mp3
+vozes/amostras/ritmo-poder-50-0.88.mp3
+vozes/amostras/ritmo-poder-50-0.95.mp3
+vozes/amostras/ritmo-voce-sabia-0.92.mp3
+vozes/amostras/ritmo-voce-sabia-1.0.mp3
+vozes/amostras/ia-na-pratica-narracao-v2.mp3   narração completa do piloto
+
+## Modelos de voz (não incluídos)
+vozes/piper/pt_BR-cadu-medium.onnx      63,0 MB
+vozes/piper/pt_BR-faber-medium.onnx     63,2 MB
+vozes/piper/pt_BR-jeff-medium.onnx      63,0 MB

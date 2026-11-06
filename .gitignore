@@ -1,0 +1,39 @@
+# Credenciais e configurações privadas
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*.json
+*secrets*.json
+
+# Ambientes e dependências
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Bancos de dados locais
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Backups e arquivos compactados
+backups/
+*.zip
+*.tar.gz
+
+# Arquivos de mídia grandes
+*.mp4
+*.wav
+*.mp3
+
+# Arquivos temporários
+tmp/
+temp/
+.cache/
+
+# API
+public/api/

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Agência de IA Autônoma · Painel Central</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+<link rel="stylesheet" href="/css/painel.css" />
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="marca">
+      <div class="marca-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/><circle cx="12" cy="12" r="4.2"/></svg>
+      </div>
+      <div class="marca-texto">
+        <strong>Agência de IA</strong>
+        <span>Autônoma · Painel Central</span>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-item ativo" data-aba="visao">
+        <span class="nav-icone" data-icone="grid"></span> Visão geral
+      </button>
+      <button class="nav-item" data-aba="canais">
+        <span class="nav-icone" data-icone="tv"></span> Canais
+      </button>
+      <button class="nav-item" data-aba="calendario">
+        <span class="nav-icone" data-icone="calendar"></span> Calendário editorial
+      </button>
+      <button class="nav-item" data-aba="producao">
+        <span class="nav-icone" data-icone="activity"></span> Produção
+      </button>
+      <button class="nav-item" data-aba="agentes">
+        <span class="nav-icone" data-icone="bot"></span> Agentes
+      </button>
+      <button class="nav-item" data-aba="direcao">
+        <span class="nav-icone" data-icone="gavel"></span> Sala de Direção
+        <span class="badge" id="badge-direcao">0</span>
+      </button>
+      <button class="nav-item" data-aba="pautas">
+        <span class="nav-icone" data-icone="search"></span> Pautas
+        <span class="badge" id="badge-pautas">0</span>
+      </button>
+      <button class="nav-item" data-aba="produtos">
+        <span class="nav-icone" data-icone="layers"></span> Produtos
+      </button>
+      <button class="nav-item" data-aba="estudio">
+        <span class="nav-icone" data-icone="layers"></span> Estúdio
+      </button>
+      <button class="nav-item" data-aba="publicacoes">
+        <span class="nav-icone" data-icone="send"></span> Publicações
+      </button>
+      <button class="nav-item" data-aba="vozes">
+        <span class="nav-icone" data-icone="mic"></span> Vozes
+      </button>
+      <button class="nav-item" data-aba="biblioteca">
+        <span class="nav-icone" data-icone="library"></span> Biblioteca
+      </button>
+      <button class="nav-item" data-aba="pendentes">
+        <span class="nav-icone" data-icone="inbox"></span> Pendentes
+        <span class="badge" id="badge-pendentes">0</span>
+      </button>
+      <button class="nav-item" data-aba="execucoes">
+        <span class="nav-icone" data-icone="activity"></span> Execuções
+      </button>
+      <button class="nav-item" data-aba="integracoes">
+        <span class="nav-icone" data-icone="plug"></span> Integrações
+      </button>
+      <button class="nav-item" data-aba="backup">
+        <span class="nav-icone" data-icone="save"></span> Backup e Exportação
+      </button>
+      <button class="nav-item" data-aba="sobre">
+        <span class="nav-icone" data-icone="info"></span> Sobre esta etapa
+      </button>
+    </nav>
+
+    <div class="sidebar-rodape">
+      <div class="pilula-etapa" id="modo-dados">conectando ao banco…</div>
+      <p id="nota-modo">Etapa 2 · decisões salvas em <code>data/db.json</code>. Nenhuma publicação, conexão externa ou pagamento.</p>
+    </div>
+  </aside>
+
+  <main class="conteudo">
+    <header class="topo">
+      <div>
+        <h1 id="titulo-aba">Visão geral</h1>
+        <p id="subtitulo-aba" class="subtitulo">Carregando…</p>
+      </div>
+      <div class="topo-acoes">
+        <div class="data-hoje" id="data-hoje"></div>
+        <button class="botao-icone" id="btn-atualizar" title="Recarregar dados">
+          <span data-icone="refresh"></span>
+        </button>
+      </div>
+    </header>
+
+    <div id="corpo" class="corpo">
+      <div class="carregando"><div class="spinner"></div> Carregando o painel…</div>
+    </div>
+  </main>
+</div>
+
+<script src="/js/icones.js"></script>
+<script src="/js/calendario.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/painel.js"></script>
+</body>
+</html>
