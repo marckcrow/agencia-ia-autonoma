@@ -246,6 +246,16 @@
       sobre: renderSobre,
     };
     $('#corpo').innerHTML = renderizadores[estado.aba](d);
+    if (window.AgentesUI) {
+      try {
+        window.AgentesUI.montar($('#corpo'), {
+          aba: estado.aba,
+          dados: d,
+          recarregar: () => carregar(estado.semanaRef),
+          toast: toast,
+        });
+      } catch (e) { console.error('[agentes-ui]', e); }
+    }
     if (estado.detalheId) abrirDetalhe(estado.detalheId, true);
   }
 
@@ -757,8 +767,9 @@
       </div>
       <div class="aviso">
         <span>${icone('alert')}</span>
-        <div><b>A1, A2 e A3 estão implementados</b> (código próprio e execuções registradas no banco)
-        e ainda não têm interface própria — rodam pela API. <b>A4, A5 e A6 são apenas especificação</b>,
+        <div><b>A1, A2 e A3 têm console próprio</b> (abaixo): você preenche os formulários,
+        pede um rascunho ao agente quando houver provedor de IA configurado no servidor e registra
+        o resultado — que passa pelas mesmas validações da API. <b>A4, A5 e A6 são apenas especificação</b>,
         sem código. A aprovação humana continua obrigatória:
         <code>POST /api/conteudos/:id/decisao</code> registra a sua decisão e nada é publicado sem ela.</div>
       </div>

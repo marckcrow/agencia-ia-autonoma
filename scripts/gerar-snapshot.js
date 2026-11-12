@@ -14,6 +14,8 @@ const calendario = require('../server/services/calendario');
 const indicadoresSvc = require('../server/services/indicadores');
 const { integracoes } = require('../server/services/integracoes');
 const agentesSvc = require('../server/services/agentes');
+const iaSvc = require('../server/services/ia');
+const agendadorSvc = require('../server/services/agendador');
 
 const SAIDA = path.join(__dirname, '..', 'public', 'api');
 
@@ -68,6 +70,8 @@ async function principal() {
     },
     'avaliacoes.json': (db.avaliacoes || []).slice().reverse(),
     'calendarios.json': (db.calendarios || []).slice().reverse(),
+    'agentes-provedor.json': iaSvc.status(),
+    'agentes-agendador.json': agendadorSvc.status(),
     'regras-agentes.json': {
       blocosRoteiro: agentesSvc.BLOCOS_ROTEIRO,
       fontesConfiaveis: agentesSvc.FONTES_CONFIAVEIS,

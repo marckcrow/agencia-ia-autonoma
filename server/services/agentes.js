@@ -186,6 +186,7 @@ function criarPauta(db, dados) {
     }),
     origem: dados.origem || 'a1',
     agenteAtual: dados.origem === 'a1' ? 'A1' : dados.agenteAtual || 'A1',
+    execucaoId: dados.execucaoId || null,
     status: dados.status || 'aprovacao',
     slot: null,
     criadoEm: agora(),
@@ -254,6 +255,7 @@ function criarRoteiro(db, pautaId, dados) {
     fontes: pauta.fontes || [],
     origem: 'a3',
     agenteAtual: 'A3',
+    execucaoId: dados.execucaoId || null,
     status: 'aprovacao',
     slot: null,
     criadoEm: agora(),
@@ -324,6 +326,7 @@ function avaliarPauta(db, pautaId, dados) {
     tituloSugerido: dados.tituloSugerido ? String(dados.tituloSugerido).slice(0, 160) : null,
     prioridade: Boolean(dados.prioridade),
     motivoPrioridade: dados.motivoPrioridade ? String(dados.motivoPrioridade).slice(0, 500) : null,
+    execucaoId: dados.execucaoId || null,
     agente: 'A2',
     em: agora(),
   };
@@ -478,7 +481,7 @@ function abrirExecucao(db, { agente, descricao, tetoCreditos }) {
   return exec;
 }
 
-function encerrarExecucao(db, execucaoId, { creditos, itensGerados, status, observacao }) {
+function encerrarExecucao(db, execucaoId, { creditos, itensGerados, status, observacao, uso, chamadasProvedor }) {
   const exec = (db.execucoes || []).find((e) => e.id === execucaoId);
   if (!exec) throw Object.assign(new Error('Execução não encontrada'), { status: 404 });
   exec.encerradaEm = agora();
@@ -486,9 +489,20 @@ function encerrarExecucao(db, execucaoId, { creditos, itensGerados, status, obse
   exec.itensGerados = Number(itensGerados) || 0;
   exec.status = status || 'concluida';
   if (observacao) exec.observacao = String(observacao).slice(0, 2000);
+  if (uso) exec.uso = uso;
+  if (Number(chamadasProvedor) > 0) exec.chamadasProvedor = Number(chamadasProvedor);
   if (exec.tetoCreditos && exec.creditos > exec.tetoCreditos) {
     exec.status = 'excedeu_teto';
   }
+  return exec;
+}
+
+/** Soma um item gerado à execução que o produziu (auditoria). */
+function registrarItemGerado(db, execucaoId) {
+  if (!execucaoId) return null;
+  const exec = (db.execucoes || []).find((e) => e.id === execucaoId);
+  if (!exec) return null;
+  exec.itensGerados = (exec.itensGerados || 0) + 1;
   return exec;
 }
 
@@ -504,6 +518,7 @@ module.exports = {
   validarRoteiro,
   abrirExecucao,
   encerrarExecucao,
+  registrarItemGerado,
   classificarFonte,
   BLOCOS_ROTEIRO,
   FONTES_CONFIAVEIS,

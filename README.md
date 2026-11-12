@@ -3,6 +3,10 @@
 **Etapa 1** — painel central de administração dos três canais (somente leitura).
 **Etapa 2** — Sala de Direção com aprovar / solicitar ajustes / rejeitar, biblioteca de
 conteúdos e persistência real das decisões.
+**Etapa 4A** — estabilização: transações serializadas, vocabulário de status
+(`aprovado` × `aprovado_final`), vínculo com o calendário e créditos auditados.
+**Etapa 4B** — console operacional dos agentes A1, A2 e A3, com provedor de IA opcional
+configurado por variável de ambiente e agendador automático desligado por padrão.
 
 Nenhuma conta externa é conectada, nada é publicado e nenhum serviço pago é acionado.
 
@@ -34,9 +38,11 @@ node scripts/gerar-snapshot.js
 node scripts/testar-etapa2.js
 node scripts/testar-integridade.js
 node scripts/testar-etapa4a.js
+node scripts/testar-etapa4b.js
+node scripts/verificar-segredos.js
 ```
 
-Roda 85 verificações, cada uma em banco temporário próprio (sem tocar nos dados reais):
+Roda 156 verificações, cada uma em banco temporário próprio (sem tocar nos dados reais):
 
 - `testar-etapa2.js` (25) — os três botões da Sala de Direção, travas de validação,
   reenvio, gravação em disco, persistência após reiniciar o servidor e a ausência
@@ -44,6 +50,10 @@ Roda 85 verificações, cada uma em banco temporário próprio (sem tocar nos da
 - `testar-integridade.js` (21) — vínculos produto → pauta → roteiro → arte/vídeo.
 - `testar-etapa4a.js` (39) — vocabulário de status (`aprovado` × `aprovado_final`),
   vínculo com o slot do calendário, serialização das transações e metadados auditados.
+- `testar-etapa4b.js` (71) — camada de provedor de IA sem vazamento de chave, rascunhos
+  recusados sem provedor (nada fictício), agendador desligado por padrão, rotas novas,
+  detalhe de execução e console do frontend sem credenciais.
+- `verificar-segredos.js` — varredura do conteúdo versionado antes de publicar a branch.
 
 ## Estrutura
 
@@ -58,17 +68,22 @@ agencia-ia/
 │       ├── indicadores.js        # indicadores derivados de dados reais
 │       ├── conteudos.js          # criação, decisões, reenvio e regras de direção
 │       ├── agentes.js            # regras de validação dos agentes A1, A2 e A3
+│       ├── ia.js                 # provedor de IA por variável de ambiente (chave só no servidor)
+│       ├── redacao.js            # rascunhos assistidos (validados, nunca salvos sozinhos)
+│       ├── agendador.js          # agendador semanal do A1 (desligado por padrão)
 │       └── integracoes.js        # registro das integrações futuras
 ├── scripts/
 │   ├── gerar-snapshot.js         # gera public/api/*.json
 │   ├── estabilizar-etapa4a.js    # alinha metadados do banco com a implementação real
+│   ├── verificar-segredos.js     # varredura de credenciais antes de publicar
 │   ├── testar-etapa2.js          # 25 verificações automáticas
 │   ├── testar-integridade.js     # 21 verificações de vínculos
-│   └── testar-etapa4a.js         # 39 verificações de regressão da Etapa 4A
+│   ├── testar-etapa4a.js         # 39 verificações de regressão da Etapa 4A
+│   └── testar-etapa4b.js         # 71 verificações da Etapa 4B
 └── public/                       # interface (HTML, CSS, JS puro, sem CDN)
     ├── index.html
     ├── css/painel.css
-    ├── js/{icones,calendario,api,painel}.js
+    ├── js/{icones,calendario,api,agentes-ui,painel}.js
     └── api/                      # snapshot JSON consumido pelo painel
 ```
 
@@ -90,6 +105,13 @@ agencia-ia/
 | `GET /api/decisoes` | Log imutável de todas as decisões |
 | `GET /api/pendentes` | Fila de aprovação |
 | `GET /api/integracoes` | Integrações futuras |
+| `GET /api/agentes/provedor` | Status público do provedor de IA (sem chave) |
+| `GET /api/agentes/agendador` | Estado do agendador (desligado por padrão) |
+| `POST /api/agentes/agendador` | Liga/desliga — exige `AGENDADOR_ATIVO=1` no servidor |
+| `POST /api/agentes/rascunho/pauta` | Rascunho de pauta (503 sem provedor) |
+| `POST /api/agentes/rascunho/roteiro` | Rascunho de roteiro (503 sem provedor) |
+| `POST /api/agentes/rascunho/avaliacao` | Rascunho de parecer do A2 (503 sem provedor) |
+| `GET /api/execucoes/:id` | Entrada, saída, fontes, histórico, créditos e uso do provedor |
 
 **Não existe rota de publicação.** O servidor não tem código capaz de publicar em rede social.
 

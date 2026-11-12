@@ -19,6 +19,9 @@ const indicadoresSvc = require('./services/indicadores');
 const { integracoes } = require('./services/integracoes');
 const conteudosSvc = require('./services/conteudos');
 const agentesSvc = require('./services/agentes');
+const iaSvc = require('./services/ia');
+const redacaoSvc = require('./services/redacao');
+const agendadorSvc = require('./services/agendador');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const VOZES_DIR = path.join(__dirname, '..', 'vozes');
@@ -121,6 +124,22 @@ async function api(rota, req, res, url) {
     if (rota === '/api/execucoes') {
       return json(res, 200, (db.execucoes || []).slice().reverse());
     }
+    const mExecucao = rota.match(/^\/api\/execucoes\/([^/]+)$/);
+    if (mExecucao) {
+      const exec = (db.execucoes || []).find((e) => e.id === mExecucao[1]);
+      if (!exec) return json(res, 404, { erro: 'Execucao nao encontrada' });
+      const conteudos = (db.conteudos || []).filter((c) => c.execucaoId === exec.id);
+      const avaliacoes = (db.avaliacoes || []).filter((a) => a.execucaoId === exec.id);
+      const ids = new Set(conteudos.map((c) => c.id));
+      const historico = (db.historico || []).filter((h) => ids.has(h.conteudoId));
+      return json(res, 200, { execucao: exec, conteudos, avaliacoes, historico });
+    }
+    if (rota === '/api/agentes/provedor') {
+      return json(res, 200, iaSvc.status());
+    }
+    if (rota === '/api/agentes/agendador') {
+      return json(res, 200, agendadorSvc.status());
+    }
     if (rota === '/api/produtos') {
       return json(res, 200, db.produtos || { itens: [] });
     }
@@ -210,19 +229,31 @@ async function api(rota, req, res, url) {
 
     /* ----- agentes ----- */
     if (rota === '/api/agentes/pautas') {
-      const pauta = await store.transacao((d) => agentesSvc.criarPauta(d, corpo));
+      const pauta = await store.transacao((d) => {
+        const p = agentesSvc.criarPauta(d, corpo);
+        agentesSvc.registrarItemGerado(d, corpo.execucaoId);
+        return p;
+      });
       return json(res, 201, pauta);
     }
 
     const mRoteiro = rota.match(/^\/api\/agentes\/pautas\/([^/]+)\/roteiro$/);
     if (mRoteiro) {
-      const roteiro = await store.transacao((d) => agentesSvc.criarRoteiro(d, mRoteiro[1], corpo));
+      const roteiro = await store.transacao((d) => {
+        const r = agentesSvc.criarRoteiro(d, mRoteiro[1], corpo);
+        agentesSvc.registrarItemGerado(d, corpo.execucaoId);
+        return r;
+      });
       return json(res, 201, roteiro);
     }
 
     const mAvaliar = rota.match(/^\/api\/agentes\/pautas\/([^/]+)\/avaliacao$/);
     if (mAvaliar) {
-      const avaliacao = await store.transacao((d) => agentesSvc.avaliarPauta(d, mAvaliar[1], corpo));
+      const avaliacao = await store.transacao((d) => {
+        const a = agentesSvc.avaliarPauta(d, mAvaliar[1], corpo);
+        agentesSvc.registrarItemGerado(d, corpo.execucaoId);
+        return a;
+      });
       return json(res, 201, avaliacao);
     }
 
@@ -230,6 +261,112 @@ async function api(rota, req, res, url) {
     if (mRevisao) {
       const pauta = await store.transacao((d) => agentesSvc.revisarPauta(d, mRevisao[1], corpo));
       return json(res, 200, pauta);
+    }
+
+    /* ----- rascunhos assistidos (Etapa 4B) ----- */
+    const semProvedor = {
+      erro: 'Nenhum provedor de IA configurado no servidor. Defina IA_PROVEDOR, IA_BASE_URL, IA_API_KEY e IA_MODELO e reinicie o servidor. O modo deterministico continua disponivel: preencha o formulario e registre manualmente.',
+      modo: 'deterministico',
+    };
+
+    if (rota === '/api/agentes/rascunho/pauta') {
+      if (!iaSvc.configurado()) return json(res, 503, semProvedor);
+      const exec = await store.transacao((d) => agentesSvc.abrirExecucao(d, {
+        agente: 'A1',
+        descricao: `Rascunho de pauta: ${String(corpo.tema || '').slice(0, 120)}`,
+        tetoCreditos: Number(corpo.tetoCreditos) || null,
+      }));
+      let r;
+      try {
+        r = await redacaoSvc.rascunhoPauta(corpo);
+      } catch (e) {
+        await store.transacao((d) => agentesSvc.encerrarExecucao(d, exec.id, {
+          status: 'erro', creditos: 0, observacao: `Falha ao gerar rascunho: ${e.message}`,
+        }));
+        return json(res, e.status || 500, { erro: e.message });
+      }
+      await store.transacao((d) => agentesSvc.encerrarExecucao(d, exec.id, {
+        status: 'concluida',
+        creditos: 0,
+        itensGerados: 0,
+        observacao: `Rascunho gerado e NAO salvo. Pendencias da validacao: ${r.validacao.erros.length ? r.validacao.erros.join('; ') : 'nenhuma'}.`,
+        uso: r.uso || null,
+        chamadasProvedor: 1,
+      }));
+      return json(res, 200, { execucaoId: exec.id, rascunho: r.rascunho, validacao: r.validacao, uso: r.uso });
+    }
+
+    if (rota === '/api/agentes/rascunho/roteiro') {
+      if (!iaSvc.configurado()) return json(res, 503, semProvedor);
+      const pauta = (db.conteudos || []).find((c) => c.id === corpo.pautaId);
+      if (!pauta) return json(res, 404, { erro: 'Pauta nao encontrada' });
+      if (pauta.status !== 'pauta_aprovada') {
+        return json(res, 409, { erro: 'O A3 so escreve roteiro sobre pauta aprovada pela direcao.' });
+      }
+      const exec = await store.transacao((d) => agentesSvc.abrirExecucao(d, {
+        agente: 'A3',
+        descricao: `Rascunho de roteiro: ${String(pauta.titulo || '').slice(0, 120)}`,
+        tetoCreditos: Number(corpo.tetoCreditos) || null,
+      }));
+      let r;
+      try {
+        r = await redacaoSvc.rascunhoRoteiro(pauta);
+      } catch (e) {
+        await store.transacao((d) => agentesSvc.encerrarExecucao(d, exec.id, {
+          status: 'erro', creditos: 0, observacao: `Falha ao gerar rascunho: ${e.message}`,
+        }));
+        return json(res, e.status || 500, { erro: e.message });
+      }
+      await store.transacao((d) => agentesSvc.encerrarExecucao(d, exec.id, {
+        status: 'concluida',
+        creditos: 0,
+        itensGerados: 0,
+        observacao: `Rascunho de roteiro gerado e NAO salvo. Pendencias: ${r.validacao.erros.length ? r.validacao.erros.join('; ') : 'nenhuma'}.`,
+        uso: r.uso || null,
+        chamadasProvedor: 1,
+      }));
+      return json(res, 200, { execucaoId: exec.id, rascunho: r.rascunho, validacao: r.validacao, uso: r.uso });
+    }
+
+    if (rota === '/api/agentes/rascunho/avaliacao') {
+      if (!iaSvc.configurado()) return json(res, 503, semProvedor);
+      const pauta = (db.conteudos || []).find((c) => c.id === corpo.pautaId);
+      if (!pauta) return json(res, 404, { erro: 'Pauta nao encontrada' });
+      if (pauta.tipo !== 'pauta') return json(res, 400, { erro: 'O A2 so avalia pautas' });
+      const exec = await store.transacao((d) => agentesSvc.abrirExecucao(d, {
+        agente: 'A2',
+        descricao: `Parecer do A2: ${String(pauta.titulo || '').slice(0, 120)}`,
+        tetoCreditos: Number(corpo.tetoCreditos) || null,
+      }));
+      let r;
+      try {
+        r = await redacaoSvc.rascunhoAvaliacao(pauta);
+      } catch (e) {
+        await store.transacao((d) => agentesSvc.encerrarExecucao(d, exec.id, {
+          status: 'erro', creditos: 0, observacao: `Falha ao gerar parecer: ${e.message}`,
+        }));
+        return json(res, e.status || 500, { erro: e.message });
+      }
+      await store.transacao((d) => agentesSvc.encerrarExecucao(d, exec.id, {
+        status: 'concluida',
+        creditos: 0,
+        itensGerados: 0,
+        observacao: `Parecer gerado e NAO salvo. Pendencias: ${r.validacao.erros.length ? r.validacao.erros.join('; ') : 'nenhuma'}.`,
+        uso: r.uso || null,
+        chamadasProvedor: 1,
+      }));
+      return json(res, 200, { execucaoId: exec.id, rascunho: r.rascunho, validacao: r.validacao, uso: r.uso });
+    }
+
+    if (rota === '/api/agentes/agendador') {
+      if (!agendadorSvc.HABILITADO_POR_AMBIENTE) {
+        return json(res, 409, {
+          erro: 'O agendador automatico esta desativado por padrao. Para liga-lo, inicie o servidor com AGENDADOR_ATIVO=1.',
+          status: agendadorSvc.status(),
+        });
+      }
+      const s = corpo && corpo.ativo ? agendadorSvc.iniciar() : agendadorSvc.parar();
+      return json(res, 200, s);
     }
 
     /* ----- produtos ----- */

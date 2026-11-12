@@ -1090,3 +1090,24 @@ audio { filter: invert(.92) hue-rotate(180deg); border-radius: 8px; }
 
 /* Backup */
 .backup-desc { font-size: 12.5px; color: var(--texto-2); line-height: 1.55; margin: 0 0 14px; }
+
+/* ------------------------------ Console dos agentes (Etapa 4B) ------------------------------ */
+
+.console-agentes { display: flex; flex-direction: column; gap: 22px; }
+.console {
+  background: var(--painel);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 18px;
+}
+.console .secao-titulo { margin-bottom: 14px; }
+.console .grade { align-items: start; }
+.console-resultado { display: flex; flex-direction: column; gap: 10px; }
+.console-resultado:empty { display: none; }
+.console h4 {
+  margin: 18px 0 8px; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--texto-3); font-weight: 600;
+}
+.console .ficha { margin-bottom: 10px; }
+.tabela-wrap { overflow-x: auto; }
+.console .tabela th { white-space: nowrap; }

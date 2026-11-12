@@ -27,7 +27,7 @@ window.Api = (function () {
     try { corpo = texto ? JSON.parse(texto) : null; } catch (_) { corpo = null; }
     if (!r.ok) {
       const msg = (corpo && corpo.erro) || `Falha (HTTP ${r.status})`;
-      throw Object.assign(new Error(msg), { status: r.status });
+      throw Object.assign(new Error(msg), { status: r.status, detalhes: corpo && corpo.detalhes, corpo });
     }
     return corpo;
   }
@@ -124,5 +124,14 @@ window.Api = (function () {
     aprovarEtapa: (id, dados) => escrever(`/conteudos/${encodeURIComponent(id)}/etapa`, dados),
     abrirExecucao: (dados) => escrever('/agentes/execucoes', dados),
     encerrarExecucao: (id, dados) => escrever(`/agentes/execucoes/${encodeURIComponent(id)}/encerrar`, dados),
+
+    /* ----- Etapa 4B: interfaces dos agentes ----- */
+    statusProvedor: () => ler('/agentes/provedor', 'agentes-provedor.json', (j) => j && typeof j.configurado === 'boolean'),
+    statusAgendador: () => ler('/agentes/agendador', 'agentes-agendador.json', (j) => j && typeof j.ativo === 'boolean'),
+    rascunhoPauta: (dados) => escrever('/agentes/rascunho/pauta', dados),
+    rascunhoRoteiro: (dados) => escrever('/agentes/rascunho/roteiro', dados),
+    rascunhoAvaliacao: (dados) => escrever('/agentes/rascunho/avaliacao', dados),
+    alternarAgendador: (dados) => escrever('/agentes/agendador', dados),
+    execucao: (id) => ler(`/execucoes/${encodeURIComponent(id)}`, 'execucoes.json', (j) => j && j.execucao),
   };
 })();
